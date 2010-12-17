@@ -1,7 +1,33 @@
-#Author: Majid al-Dosari
 
+##Author: Majid al-Dosari
+#Copyright (c) 2010, Majid al-Dosari
+#All rights reserved.
+#
+#Redistribution and use in source and binary forms, with or without
+#modification, are permitted provided that the following conditions are met:
+#    * Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
+#    * Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#    * Neither the name of the <organization> nor the
+#      names of its contributors may be used to endorse or promote products
+#      derived from this software without specific prior written permission.
+#
+#THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+#ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+#WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+#DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+#DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+#(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+#LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+#ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+#(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#Basic programmatic access to the PBS system (no external code reqd) and linking of user PBS scripts on the filesystem to those on the PBS system to allow for decision making.
+#Basic programmatic access to the PBS system (no external code reqd) and 
+#linking of user PBS scripts on the filesystem to those on the PBS system 
+#to allow for decision making.
 #
 #Main uses:
 #- status monitoring
@@ -22,6 +48,10 @@ import shlex
 import os
 import fnmatch
 import time
+
+"""
+python thisfile.py --help
+"""
 
 def runc(cmdline,stdoutt=subprocess.PIPE,stderrr=subprocess.PIPE):
     """stdout=None for screen(?)"""
@@ -284,8 +314,8 @@ class pbsmgr(object): #objparams->taskid->pbsname,(pbsid on each submission)
     
     def action_keeprunning(self,listofjobnames
         ,refreshtime=60*5,idiotproof=True):
-		"""
-		input listofjobnames, timer in secs
+        """
+        input listofjobnames, timer in secs
         jobnames are those that passed the inclusion and exclusion process.
         
         for the any job in this list it is only safe if you manually submit a job before the
@@ -294,8 +324,7 @@ class pbsmgr(object): #objparams->taskid->pbsname,(pbsid on each submission)
         managed pbs files..which you can do as yourobjinst.genjobsinfotbl().keys()
         so please let this method do its job. in any case, nothing will prevent you from
         manually submitting the same script twice from the cmd line.
-        this script offers no protection from stupidity.
-		"""
+        this script offers no protection from stupidity."""
         #if i'm working w/ the pbs system i can just loop w/in the pbs
         #sys with a script"""
         #PBS -N loopme
@@ -303,51 +332,93 @@ class pbsmgr(object): #objparams->taskid->pbsname,(pbsid on each submission)
         # qsub w/ Execution time delayed by (at least) t+walltime
         #qselect -N loopme > joblist
         #qdel < joblist   ...will this line work?
-				
-		self.kwargs['actions']['keeprunning']=listofjobnames #args[0]#update(kwargs)
-		kr=self.kwargs['actions']['keeprunning']
-		
-		while True:
-			if kr=='ALL': jns=self.genjobsinfotbl()[0].keys()
-			else: jns=kr
-			
-			o=self.action_runifnotrunning(jns)
-			
+        self.kwargs['actions']['keeprunning']=listofjobnames #args[0]#update(kwargs)
+        kr=self.kwargs['actions']['keeprunning']
+        
+        while True:
+            if kr=='ALL': jns=self.genjobsinfotbl()[0].keys()
+            else: jns=kr
+            
+            o=self.action_runifnotrunning(jns)
+            
             #to attempt to idiotproof:
             #bad: both Q, 2nd one Q 1st R , both R
-			if idiotproof==True:
+            if idiotproof==True:
                 #loop thru pbsidinfo by ordered keys low to hi.
                 #for each jid go 
-				dbyid=self.jobinfobypbsid
-				sortedids=dbyid.keys()
-				sortedids.sort()
-				deleted=[]
-				for apbsid in sortedids:
-					if apbsid not in deleted:
-						statusofolderone=dbyid[apbsid]['job_state']
-						remainingids=sortedids[sortedids.index(apbsid)+1:]
-						for arid in remainingids:
-							if dbyid[arid]['Job_Name'] == dbyid[apbsid]['Job_Name']:
-								#statusofolderone = dbyid[arid]['job_state']
-								statusofnewerone = dbyid[arid]['job_state']
-								if ((statusofolderone  == 'Q') and ('Q'== statusofnewerone))\
-								or ((statusofolderone  == 'R') and ('Q'== statusofnewerone))\
-								or ((statusofolderone  == 'R') and ('R'== statusofnewerone)):
-									qdo=self._qdel(arid)
-									deleted.append(arid)
-									if qdo[0] or qdo[1] != '': #ie something happened
-										print 'qdel output: ', qdo[0], qdo[1]
-									else: print 'deleted conflicting job', arid , 'for', dbyid[apbsid]['Job_Name']
-            
-            
-			name_output=zip(jns,o)
-			for aname,ano in name_output:
-				if ano != None:
-					print "qsub output: ", ano.replace('\n',''), "for ", aname 
-			time.sleep(refreshtime) #secs
-		
+                dbyid=self.jobinfobypbsid
+                sortedids=dbyid.keys()
+                sortedids.sort()
+                deleted=[]
+                for apbsid in sortedids:
+                    if apbsid not in deleted:
+                        statusofolderone=dbyid[apbsid]['job_state']
+                        remainingids=sortedids[sortedids.index(apbsid)+1:]
+                        for arid in remainingids:
+                            if dbyid[arid]['Job_Name'] == dbyid[apbsid]['Job_Name']:
+                                #statusofolderone = dbyid[arid]['job_state']
+                                statusofnewerone = dbyid[arid]['job_state']
+                                if ((statusofolderone  == 'Q') and ('Q'== statusofnewerone))\
+                                or ((statusofolderone  == 'R') and ('Q'== statusofnewerone))\
+                                or ((statusofolderone  == 'R') and ('R'== statusofnewerone)):
+                                    qdo=self._qdel(arid)
+                                    deleted.append(arid)
+                                    if qdo[0] or qdo[1] != '': #ie something happened
+                                        print 'qdel output: ', qdo[0], qdo[1]
+                                    else: print 'deleted conflicting job', arid , 'for', dbyid[apbsid]['Job_Name']
+        
+            name_output=zip(jns,o)
+            for aname,ano in name_output:
+                if ano != None:
+                    print "qsub output: ", ano.replace('\n',''), "for ", aname 
+            time.sleep(refreshtime) #secs
 
-		return #yeah right..
+        return #yeah right..        
+                
+#        self.kwargs['actions']['keeprunning']=listofjobnames #args[0]#update(kwargs)
+#        kr=self.kwargs['actions']['keeprunning']
+#        
+#        while True:
+#            if kr=='ALL': jns=self.genjobsinfotbl()[0].keys()
+#            else: jns=kr
+#            
+#            o=self.action_runifnotrunning(jns)
+#            
+#            #to attempt to idiotproof:
+#            #bad: both Q, 2nd one Q 1st R , both R
+#            if idiotproof==True:
+#                #loop thru pbsidinfo by ordered keys low to hi.
+#                #for each jid go 
+#                dbyid=self.jobinfobypbsid
+#                sortedids=dbyid.keys()
+#                sortedids.sort()
+#                deleted=[]
+#                for apbsid in sortedids:
+#                    if apbsid not in deleted:
+#                        statusofolderone=dbyid[apbsid]['job_state']
+#                        remainingids=sortedids[sortedids.index(apbsid)+1:]
+#                        for arid in remainingids:
+#                            if dbyid[arid]['Job_Name'] == dbyid[apbsid]['Job_Name']:
+#                                #statusofolderone = dbyid[arid]['job_state']
+#                                statusofnewerone = dbyid[arid]['job_state']
+#                                if ((statusofolderone  == 'Q') and ('Q'== statusofnewerone))\
+#                                or ((statusofolderone  == 'R') and ('Q'== statusofnewerone))\
+#                                or ((statusofolderone  == 'R') and ('R'== statusofnewerone)):
+#                                    qdo=self._qdel(arid)
+#                                    deleted.append(arid)
+#                                    if qdo[0] or qdo[1] != '': #ie something happened
+#                                        print 'qdel output: ', qdo[0], qdo[1]
+#                                    else: print 'deleted conflicting job', arid , 'for', dbyid[apbsid]['Job_Name']
+#            
+#            
+#            name_output=zip(jns,o)
+#            for aname,ano in name_output:
+#                if ano != None:
+#                    print "qsub output: ", ano.replace('\n',''), "for ", aname 
+#            time.sleep(refreshtime) #secs
+#        
+#
+#        return #yeah right..
         #could spawn a proc but it should be mgd separately
         
 
@@ -375,7 +446,7 @@ if __name__ == '__main__':
     #idiot-proof option?
     from optparse import OptionParser
     usage='Resubmits PBS scripts in current and below directories.\
-	Conflicting submissions are removed.'
+    Conflicting submissions are removed.'
     parser = OptionParser(usage=usage)
     import getpass
     uid=getpass.getuser()
@@ -388,7 +459,7 @@ if __name__ == '__main__':
               dir by repeating the option. default is just cd: "+cd)
     parser.add_option("--refresh",'-r', dest="refresh",default=300
               ,help="refresh time. default: 300 secs",type=int)
-	
+    
     (options, args) = parser.parse_args()
     
     mainpbsmgr=pbsmgr(incldirs=options.dirs #AGAIN! i fail to input as a list!
