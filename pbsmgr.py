@@ -53,13 +53,25 @@ import time
 python thisfile.py --help
 """
 
-def runc(cmdline,stdoutt=subprocess.PIPE,stderrr=subprocess.PIPE):
-    """stdout=None for screen(?)"""
+def runc2(cmdline,stdoutt=subprocess.PIPE,stderrr=subprocess.PIPE):
+    """does not block if error"""    
+    #stdout=None for screen(?)"""
     args = shlex.split(cmdline)
     r=subprocess.Popen(args,stdout=stdoutt,stderr=stderrr)
     #r.terminate() #or kill()? #necessary? b/c it auto gets killed
     #r.stdout #fileobj
     return r.communicate()  #(stdo,stde)
+def runc(*args,**kwargs):
+    """blocks until no error"""
+    #todo remove similar code from calls to this fnc
+    OnE=runc2(*args,**kwargs)
+    while OnE[1]!='': #meaning there's something wrong
+        print 'ERROR in cmd:',args[0],' ',OnE[1]
+        time.sleep(60)
+        OnE=runc2(*args,**kwargs)
+    return OnE#both outs. todo all calls shouls assume it will get teh desired
+    #output b/c errors handled here
+    
 
 def namematcher(listofnames,listofpatterns):#intended for fnames, but what the heck
     """input pattern_S_"""
