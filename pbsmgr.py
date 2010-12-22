@@ -151,7 +151,17 @@ class pbsmgr(object): #objparams->taskid->pbsname,(pbsid on each submission)
         #pbsq.getjob(pbsid)[attrib] using the module is more robust
         #but the following will do for most purposes
         #returns {} if it doesn't exist
-        statustxt=runc('qstat '+pbsid+' -f')[0]
+        #def qstato(): return runc2('qstat '+pbsid+' -f') #both stdo,stderr
+        bothstatus=runc2('qstat '+pbsid+' -f') #both stdo,stderr#qstato()
+        if 'Unknown Job' in bothstatus[1] or 'Unknown Job' in bothstatus[0]:
+            raise KeyError, 'job '+str(pbsid)+' not found'
+        if 'error' not in  bothstatus[1]  or 'error' not in  bothstatus[0]\
+            or 'ERROR' not in  bothstatus[1] or 'ERROR' not in  bothstatus[0]\
+            or 'Error' not in  bothstatus[1] or 'Error' not in  bothstatus[0]:
+                statustxt=bothstatus[0]
+        else:#block until no error. the expected "error" here is just 
+        #a disruption in the pbs system
+            statustxt=runc('qstat '+pbsid+' -f')[0]
         linesofstatus=statustxt.splitlines()
         attribvals=[]
         for anattrib in attriblist:
@@ -278,11 +288,21 @@ class pbsmgr(object): #objparams->taskid->pbsname,(pbsid on each submission)
         2. matches name to pbsjob id
         3. attribs
         """
-        lpbsj=self.getlistofpbsjobsinsys()#jobs in sys
         jid2attribs={}
-        for ajobid in lpbsj:
-            ad=dict(zip(self.pbsidattribs,self.getjobinfo(ajobid,self.pbsidattribs)))
-            jid2attribs.update({ajobid:ad})
+        
+        stop=False #this loop is for that really small chance when a list of
+        #pbs jobs is retrieved but then it disappears (expires) when i want to 
+        #get info on it
+        while stop==False:
+            try:
+                lpbsj=self.getlistofpbsjobsinsys()#jobs in sys
+                for ajobid in lpbsj:
+                    ad=dict(zip(self.pbsidattribs,self.getjobinfo(ajobid,self.pbsidattribs)))
+                    jid2attribs.update({ajobid:ad})
+                stop=True
+            except KeyError: continue
+        del stop
+            
         n2f=self.mappbsnames2files()
         #map w name k
         dbyname=dict.fromkeys(n2f.keys())
