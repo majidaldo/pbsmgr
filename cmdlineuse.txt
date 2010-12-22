@@ -1,0 +1,5 @@
+for monitoring of jobs, check the help on:
+yourpythonexe  pbsmon.py --help
+
+for job resubmission, check the help on:
+yourpythonexe  pbsmgr.py --help

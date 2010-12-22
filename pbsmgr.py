@@ -50,7 +50,7 @@ import fnmatch
 import time
 
 """
-python thisfile.py --help
+python thisfile --help
 """
 
 def runc2(cmdline,stdoutt=subprocess.PIPE,stderrr=subprocess.PIPE):
