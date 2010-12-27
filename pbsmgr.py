@@ -299,8 +299,8 @@ class pbsmgr(object): #objparams->taskid->pbsname,(pbsid on each submission)
                 for ajobid in lpbsj:
                     ad=dict(zip(self.pbsidattribs,self.getjobinfo(ajobid,self.pbsidattribs)))
                     jid2attribs.update({ajobid:ad})
-                stop=True
-            except KeyError: continue
+                    stop=True
+            except KeyError: stop=False;continue
         del stop
             
         n2f=self.mappbsnames2files()
