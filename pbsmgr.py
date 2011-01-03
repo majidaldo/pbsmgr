@@ -291,7 +291,7 @@ class pbsmgr(object): #objparams->taskid->pbsname,(pbsid on each submission)
         jid2attribs={}
         
         stop=False #this loop is for that really small chance when a list of
-        #pbs jobs is retrieved but then it disappears (expires) when i want to 
+        #pbs jobs is retrieved but then it disappears (expires?) when i want to 
         #get info on it
         while stop==False:
             try:
@@ -299,8 +299,9 @@ class pbsmgr(object): #objparams->taskid->pbsname,(pbsid on each submission)
                 for ajobid in lpbsj:
                     ad=dict(zip(self.pbsidattribs,self.getjobinfo(ajobid,self.pbsidattribs)))
                     jid2attribs.update({ajobid:ad})
-                    stop=True
-            except KeyError: stop=False;continue
+                namesinsys=[jid2attribs[ajob]['Job_Name'] for ajob in lpbsj]
+                stop=True
+            except KeyError: stop=False
         del stop
             
         n2f=self.mappbsnames2files()
@@ -311,7 +312,7 @@ class pbsmgr(object): #objparams->taskid->pbsname,(pbsid on each submission)
             pbsnad.pop('Job_Name')
             pbsnad.update({'pbsfile':n2f[aname]})
             dbyname.update({aname:pbsnad})
-        namesinsys=[jid2attribs[ajob]['Job_Name'] for ajob in lpbsj]
+        #namesinsys=[jid2attribs[ajob]['Job_Name'] for ajob in lpbsj]
         myjobnsinsys=frozenset.intersection(frozenset(n2f.keys()),frozenset(namesinsys))
         for ajn in myjobnsinsys:
             jids_highestnofirst=jid2attribs.keys()
