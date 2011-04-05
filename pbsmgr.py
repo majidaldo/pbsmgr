@@ -343,6 +343,7 @@ class pbsmgr(object): #objparams->taskid->pbsname,(pbsid on each submission)
                 o.append(self._qsub(jobsinfo[an]['pbsfile']))
             else: o.append(None)
         return o
+        
     
     
     def action_keeprunning(self,listofjobnames
@@ -373,6 +374,19 @@ class pbsmgr(object): #objparams->taskid->pbsname,(pbsid on each submission)
             else: jns=kr
             
             o=self.action_runifnotrunning(jns)
+            #block for an error when the pbs info in the server disappears
+            #before the action_runifnotrunning            
+            try:o=self.action_runifnotrunning(jns)
+            except KeyError:
+                keyerror=True
+                while keyerror==True:
+                    try:
+                        jns=self.genjobsinfotbl()[0].keys()
+                        try:o=self.action_runifnotrunning(jns)
+                        except: pass
+                        keyerror=False
+                    except KeyError: keyerror=True
+                del keyerror
             
             #to attempt to idiotproof:
             #bad: both Q, 2nd one Q 1st R , both R
